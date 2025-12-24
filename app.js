@@ -11,6 +11,8 @@
 
   const markers = L.markerClusterGroup();
   map.addLayer(markers);
+  // Map QID -> marker to avoid duplicates and allow merging
+  const idToMarker = new Map();
 
   const zoomThresholdInput = document.getElementById('zoomThreshold');
   const labelZoomInput = document.getElementById('labelZoom');
@@ -101,7 +103,7 @@ SELECT ?item ?itemLabel ?coord WHERE {
     const z = map.getZoom();
     const threshold = parseInt(zoomThresholdInput.value,10) || 12;
     if(z < threshold){
-      markers.clearLayers();
+      // do not remove already-downloaded items; just skip fetching when zoom is below threshold
       setStatus('zoom below threshold (current '+z+')');
       return;
     }
@@ -133,19 +135,35 @@ SELECT ?item ?itemLabel ?coord WHERE {
   }
 
   function renderResults(sparqlJson){
-    markers.clearLayers();
     const bs = sparqlJson.results.bindings;
     for(const b of bs){
       const itemUrl = b.item.value; // e.g. http://www.wikidata.org/entity/Qxxx
+      const qid = itemUrl.split('/').pop();
       const label = b.itemLabel ? b.itemLabel.value : itemUrl;
       const coord = b.coord.value; // e.g. "Point(lon lat)"
       const m = coord.match(/Point\s*\(([-0-9.eE]+)\s+([-0-9.eE]+)\)/);
       if(!m) continue;
       const lon = parseFloat(m[1]);
       const lat = parseFloat(m[2]);
-      const marker = createMarker(lat, lon, label, itemUrl);
-      markers.addLayer(marker);
+      if(idToMarker.has(qid)){
+        // merge: update label and coordinates if changed
+        const existing = idToMarker.get(qid);
+        existing.wdLabel = label;
+        // update position if different
+        try{
+          const pos = existing.getLatLng();
+          if(Math.abs(pos.lat - lat) > 1e-6 || Math.abs(pos.lng - lon) > 1e-6){
+            existing.setLatLng([lat, lon]);
+          }
+        }catch(e){/* ignore */}
+      } else {
+        const marker = createMarker(lat, lon, label, itemUrl);
+        markers.addLayer(marker);
+        idToMarker.set(qid, marker);
+      }
     }
+    // ensure icons reflect label visibility for any newly added markers
+    try{ updateMarkerIcons(); }catch(e){}
   }
 
   // Create a marker that may show a label depending on current zoom and label threshold
