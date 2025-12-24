@@ -17,11 +17,19 @@
     <div id="sidebar">
       <div id="controls">
         <label>Show items when zoom ≥ <input id="zoomThreshold" type="number" value="12" min="0" max="20" style="width:60px"/> </label>
-        <label style="margin-left:8px">Show labels when zoom ≥ <input id="labelZoom" type="number" value="16" min="0" max="22" style="width:60px"/> </label>
+        <label style="margin-left:8px">Show labels when zoom ≥ <input id="labelZoom" type="number" value="12" min="0" max="22" style="width:60px"/> </label>
         <button id="pauseBtn" style="margin-left:8px">Pause downloads</button>
+        <button id="showListBtn" style="margin-left:8px">Show list</button>
         <div id="status">Status: ready</div>
       </div>
-      <div id="details"><em>Click a marker to see Wikidata details here.</em></div>
+      <div id="downloadedList">
+        <h3 id="downloadedListTitle">Downloaded items (0)</h3>
+        <ul id="downloadedListUL"></ul>
+      </div>
+      <div id="details">
+        <button id="detailsClose" class="details-close hidden" aria-label="Close details">✕</button>
+        <div id="detailsContent"><em>Click a marker or an item to see Wikidata details here.</em></div>
+      </div>
     </div>
   </div>
 

@@ -8,6 +8,18 @@ html,body,#app{height:100%;margin:0;padding:0;font-family:Arial, sans-serif}
 #controls{padding:6px 4px;border-bottom:1px solid #ddd;margin-bottom:8px}
 #status{margin-top:6px;color:#555;font-size:13px}
 #details{padding:6px;font-size:14px}
+.downloaded-item{list-style:none;padding:6px 8px;margin:4px 0;background:white;border-radius:4px;border:1px solid #eee;cursor:pointer}
+.downloaded-item:hover{background:#f0f8ff}
+#downloadedList{padding:6px}
+#downloadedList h3{margin:6px 0}
+#downloadedListUL{margin:0;padding:0;max-height:40vh;overflow:auto}
+/* utility */
+.hidden{display:none !important}
+
+/* details close button */
+.details-close{position:absolute;right:8px;top:6px;background:#fff;border:1px solid #ccc;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:14px}
+#details{position:relative}
+#detailsContent{padding-top:6px}
 .entity-link{color:#0077cc;text-decoration:none}
 .claim{margin:6px 0;padding:6px;background:white;border-radius:4px;border:1px solid #eee}
 .claim .prop{font-weight:600}

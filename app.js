@@ -17,8 +17,11 @@
   const zoomThresholdInput = document.getElementById('zoomThreshold');
   const labelZoomInput = document.getElementById('labelZoom');
   const pauseBtn = document.getElementById('pauseBtn');
+  const showListBtn = document.getElementById('showListBtn');
   const statusEl = document.getElementById('status');
   const detailsEl = document.getElementById('details');
+  const detailsContentEl = document.getElementById('detailsContent');
+  const detailsCloseBtn = document.getElementById('detailsClose');
 
   const sidebarToggle = document.getElementById('sidebarToggle');
   const appEl = document.getElementById('app');
@@ -39,9 +42,12 @@
   }
 
   let paused = false;
+  let autoPausedDueToLimit = false;
   if(pauseBtn){
     pauseBtn.addEventListener('click', ()=>{
       paused = !paused;
+      // if user manually resumes, clear auto-pause flag
+      if(!paused) autoPausedDueToLimit = false;
       pauseBtn.textContent = paused ? 'Resume downloads' : 'Pause downloads';
       setStatus(paused ? 'paused' : 'ready');
       if(!paused){
@@ -49,6 +55,28 @@
         lastFetchToken = Date.now();
         fetchItemsForVisibleBBox(lastFetchToken);
       }
+    });
+  }
+
+  if(showListBtn){
+    showListBtn.addEventListener('click', ()=>{
+      const dl = document.getElementById('downloadedList');
+      if(!dl) return;
+      dl.style.display = '';
+      // re-render the list (in case labels changed)
+      try{ renderDownloadedList(); }catch(e){}
+    });
+  }
+
+  if(detailsCloseBtn){
+    detailsCloseBtn.addEventListener('click', ()=>{
+      // hide details content and show list
+      try{
+        const dl = document.getElementById('downloadedList');
+        if(dl) dl.style.display = '';
+        detailsContentEl.innerHTML = '<em>Click a marker or an item to see Wikidata details here.</em>';
+        detailsCloseBtn.classList.add('hidden');
+      }catch(e){ console.warn(e); }
     });
   }
 
@@ -164,6 +192,43 @@ SELECT ?item ?itemLabel ?coord WHERE {
     }
     // ensure icons reflect label visibility for any newly added markers
     try{ updateMarkerIcons(); }catch(e){}
+    try{ renderDownloadedList(); }catch(e){}
+    // Auto-pause if too many items downloaded
+    try{
+      const count = idToMarker.size;
+      if(count > 100 && !paused){
+        paused = true;
+        autoPausedDueToLimit = true;
+        if(pauseBtn) pauseBtn.textContent = 'Resume downloads';
+        setStatus('paused (download limit reached: '+count+')');
+        try{ alert('You just downloaded '+count+' items. Downloading is now paused. Click "Resume downloads" to continue.'); }catch(e){}
+      }
+    }catch(e){console.warn(e)}
+  }
+
+  function renderDownloadedList(){
+    const ul = document.getElementById('downloadedListUL');
+    if(!ul) return;
+    // update title with count
+    try{
+      const title = document.getElementById('downloadedListTitle');
+      if(title) title.textContent = 'Downloaded items (' + idToMarker.size + ')';
+    }catch(e){}
+    // clear
+    ul.innerHTML = '';
+    for(const [qid, marker] of idToMarker){
+      const li = document.createElement('li');
+      li.className = 'downloaded-item';
+      const name = marker.wdLabel || qid;
+      li.textContent = name;
+      li.dataset.qid = qid;
+      li.addEventListener('click', ()=>{
+        try{ document.getElementById('downloadedList').style.display = 'none'; }catch(e){}
+        try{ map.setView(marker.getLatLng(), 16); }catch(e){}
+        fetchAndShowEntity(qid);
+      });
+      ul.appendChild(li);
+    }
   }
 
   // Create a marker that may show a label depending on current zoom and label threshold
@@ -218,14 +283,17 @@ SELECT ?item ?itemLabel ?coord WHERE {
 
   async function fetchAndShowEntity(qid){
     setStatus('loading entity '+qid);
-    detailsEl.innerHTML = '<div class="small">Loading '+qid+'…</div>';
+    // hide the downloaded list while showing details
+    try{ document.getElementById('downloadedList').style.display = 'none'; }catch(e){}
+    // show close button
+    try{ detailsCloseBtn.classList.remove('hidden'); }catch(e){}
+    detailsContentEl.innerHTML = '<div class="small">Loading '+qid+'…</div>';
     const url = WIKIDATA_API + '?action=wbgetentities&ids='+encodeURIComponent(qid)+'&props=labels|descriptions|claims&languages=en&format=json&origin=*';
     try{
       const res = await fetch(url);
       const data = await res.json();
       const ent = data.entities && data.entities[qid];
       if(!ent){ detailsEl.innerHTML = '<div class="small">No data</div>'; setStatus('ready'); return }
-
       const label = (ent.labels && ent.labels.en && ent.labels.en.value) || qid;
       const desc = (ent.descriptions && ent.descriptions.en && ent.descriptions.en.value) || '';
 
@@ -312,11 +380,11 @@ SELECT ?item ?itemLabel ?coord WHERE {
         }
       }
 
-      detailsEl.innerHTML = html;
+      detailsContentEl.innerHTML = html;
       setStatus('ready');
     }catch(err){
       console.error(err);
-      detailsEl.innerHTML = '<div class="small">Failed to load</div>';
+      detailsContentEl.innerHTML = '<div class="small">Failed to load</div>';
       setStatus('ready');
     }
   }
