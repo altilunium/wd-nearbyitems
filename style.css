@@ -1,0 +1,26 @@
+html,body,#app{height:100%;margin:0;padding:0;font-family:Arial, sans-serif}
+#app{display:flex;flex-direction:row}
+#app.collapsed #sidebar{width:0;padding:0;border-left:0;overflow:hidden}
+#app.collapsed #sidebar .controls-hidden { display:none }
+#app.collapsed #sidebar *{pointer-events:none}
+#map{flex:1;height:100vh;position:relative}
+#sidebar{width:360px;max-width:40%;background:#f7f7f7;border-left:1px solid #ddd;padding:8px;box-sizing:border-box;overflow:auto}
+#controls{padding:6px 4px;border-bottom:1px solid #ddd;margin-bottom:8px}
+#status{margin-top:6px;color:#555;font-size:13px}
+#details{padding:6px;font-size:14px}
+.entity-link{color:#0077cc;text-decoration:none}
+.claim{margin:6px 0;padding:6px;background:white;border-radius:4px;border:1px solid #eee}
+.claim .prop{font-weight:600}
+.small{font-size:13px;color:#555}
+
+/* Labelled marker styles */
+.wd-div-icon { background: transparent; }
+.wd-label-container { display: inline-flex; align-items: center; white-space: nowrap; }
+.wd-pin { width:14px; height:14px; background:#2A93EE; border-radius:50%; display:inline-block; margin-right:6px; box-shadow:0 1px 2px rgba(0,0,0,0.3); }
+.wd-marker-label { background: rgba(255,255,255,0.95); padding:3px 6px; border-radius:4px; border:1px solid #ddd; font-size:13px; color:#222; }
+
+/* Sidebar toggle (hamburger) */
+.sidebar-toggle{position:absolute;top:8px;right:12px;z-index:1000;background:#fff;border:1px solid #ccc;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:16px}
+.sidebar-toggle:active{transform:translateY(1px)}
+
+

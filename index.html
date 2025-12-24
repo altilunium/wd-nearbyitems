@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wd-Nearbyitems</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="map">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+    </div>
+    <div id="sidebar">
+      <div id="controls">
+        <label>Show items when zoom ≥ <input id="zoomThreshold" type="number" value="12" min="0" max="20" style="width:60px"/> </label>
+        <label style="margin-left:8px">Show labels when zoom ≥ <input id="labelZoom" type="number" value="16" min="0" max="22" style="width:60px"/> </label>
+        <button id="pauseBtn" style="margin-left:8px">Pause downloads</button>
+        <div id="status">Status: ready</div>
+      </div>
+      <div id="details"><em>Click a marker to see Wikidata details here.</em></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
