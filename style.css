@@ -35,4 +35,15 @@ html,body,#app{height:100%;margin:0;padding:0;font-family:Arial, sans-serif}
 .sidebar-toggle{position:absolute;top:8px;right:12px;z-index:1000;background:#fff;border:1px solid #ccc;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:16px}
 .sidebar-toggle:active{transform:translateY(1px)}
 
+/* Coordinate modal */
+.coord-modal-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2000;pointer-events:auto}
+.coord-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.35);}
+.coord-modal{position:relative;background:#fff;border-radius:8px;padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,0.25);min-width:320px;max-width:90%;z-index:2001}
+.coord-modal h3{margin:0 0 8px 0;font-size:16px}
+.coord-modal .row{display:flex;gap:8px}
+.coord-modal input[type="text"]{flex:1;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px}
+.coord-modal .btn{padding:8px 10px;border-radius:4px;border:1px solid #bbb;background:#f3f3f3;cursor:pointer}
+.coord-modal .btn-primary{background:#2A93EE;color:#fff;border-color:#2380d6}
+.coord-modal .help{font-size:12px;color:#666;margin-top:6px}
+
 

@@ -398,6 +398,112 @@ SELECT ?item ?itemLabel ?coord WHERE {
     }, 500);
   }
 
+  // --- Coordinate input modal and keyboard shortcut (Ctrl+,) ---
+  // Build modal DOM lazily and attach to map container
+  let coordModalEl = null;
+
+  function createCoordModal(){
+    if(coordModalEl) return coordModalEl;
+    const container = document.createElement('div');
+    container.className = 'coord-modal-overlay';
+    // backdrop covers the map
+    const backdrop = document.createElement('div');
+    backdrop.className = 'coord-modal-backdrop';
+    container.appendChild(backdrop);
+
+    const modal = document.createElement('div');
+    modal.className = 'coord-modal';
+    modal.innerHTML = `
+      <h3>Go to coordinate</h3>
+      <div class="row">
+        <input id="coordInput" type="text" placeholder="lat, lon or lon, lat" aria-label="Coordinate input" />
+        <button id="coordGo" class="btn btn-primary">Go</button>
+        <button id="coordCancel" class="btn">Cancel</button>
+      </div>
+      <div class="help">Examples: 51.5074, -0.1278  or -0.1278, 51.5074</div>
+    `;
+    container.appendChild(modal);
+
+    // click on backdrop closes modal
+    backdrop.addEventListener('click', hideCoordModal);
+
+    container.addEventListener('keydown', (ev)=>{
+      if(ev.key === 'Escape'){ ev.preventDefault(); hideCoordModal(); }
+      if(ev.key === 'Enter'){
+        ev.preventDefault(); const goBtn = document.getElementById('coordGo'); if(goBtn) goBtn.click();
+      }
+    });
+
+    // hook up buttons when inserted into DOM
+    setTimeout(()=>{
+      const go = container.querySelector('#coordGo');
+      const cancel = container.querySelector('#coordCancel');
+      const inp = container.querySelector('#coordInput');
+      if(go) go.addEventListener('click', ()=>{
+        if(!inp) return;
+        const text = inp.value.trim();
+        const parsed = parseCoordinate(text);
+        if(!parsed){
+          try{ alert('Invalid coordinate. Use format: lat, lon or lon, lat (decimal degrees)'); }catch(e){}
+          return;
+        }
+        const {lat, lon} = parsed;
+        const targetZoom = (typeof map.getMaxZoom === 'function') ? Math.floor(map.getMaxZoom() || 19) : 19;
+        try{ map.flyTo([lat, lon], targetZoom); }catch(e){ map.setView([lat, lon], targetZoom); }
+        hideCoordModal();
+      });
+      if(cancel) cancel.addEventListener('click', hideCoordModal);
+    },0);
+
+    coordModalEl = container;
+    return coordModalEl;
+  }
+
+  function showCoordModal(){
+    const el = createCoordModal();
+    // avoid adding multiple times
+    const mapContainer = map.getContainer();
+    if(!mapContainer.contains(el)){
+      mapContainer.appendChild(el);
+    }
+    // focus input
+    const inp = el.querySelector('#coordInput');
+    if(inp){ inp.value = ''; inp.focus(); inp.select(); }
+  }
+
+  function hideCoordModal(){
+    if(!coordModalEl) return;
+    try{ coordModalEl.remove(); }catch(e){}
+    // keep the element reference so it's re-used next time
+  }
+
+  // Parse simple decimal coordinate formats. Accepts "lat, lon" or "lon, lat" and attempts to disambiguate.
+  function parseCoordinate(text){
+    if(!text) return null;
+    // allow comma or whitespace separator
+    const parts = text.split(/[,\s]+/).filter(Boolean);
+    if(parts.length < 2) return null;
+    const a = parseFloat(parts[0]);
+    const b = parseFloat(parts[1]);
+    if(Number.isNaN(a) || Number.isNaN(b)) return null;
+    // If first value in range [-90,90] and second in [-180,180], assume lat,lon
+    if(a >= -90 && a <= 90 && b >= -180 && b <= 180) return { lat: a, lon: b };
+    // Else if first in lon range and second in lat range, swap
+    if(a >= -180 && a <= 180 && b >= -90 && b <= 90) return { lat: b, lon: a };
+    // fallback: assume lat,lon
+    return { lat: a, lon: b };
+  }
+
+  // Keyboard shortcut: Ctrl+, opens modal. Ignore when typing in inputs.
+  document.addEventListener('keydown', (ev)=>{
+    if(!ev.ctrlKey || ev.altKey || ev.metaKey) return;
+    if(ev.key === ','){
+      const active = document.activeElement;
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      ev.preventDefault(); showCoordModal();
+    }
+  });
+
   map.on('moveend zoomend', scheduleUpdate);
   zoomThresholdInput.addEventListener('change', scheduleUpdate);
   // update marker icons when zoom changes (labels appear/disappear)
